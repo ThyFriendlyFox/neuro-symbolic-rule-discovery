@@ -111,21 +111,32 @@ Return ONLY a JSON array."""
         except Exception:
             return []
     def _generate_fallback_hypotheses(self, observations, penalties, n=5):
-        """Fallback when LLM unavailable: generate basic verifiable hypotheses from observations."""
+        """Fallback when LLM unavailable: generate *generic*, zero-knowledge hypotheses.
+        Never hardcode game-specific numbers (e.g. 7) or rules that leak test env.
+        Purely structural hypotheses over observed variables.
+        """
         hypotheses = []
+        # Generic structural hypotheses (true zero-knowledge)
         hypotheses.append(Hypothesis(
-            id=f"fallback-parity-{len(hypotheses)}",
-            statement="Move validity depends on parity relationship between current and previous card",
-            formal_condition="(card % 2 == 0) and (previous_card % 2 == 1)",
-            tags=["parity", "fallback"],
-            confidence=0.4
+            id=f"fallback-structural-{len(hypotheses)}",
+            statement="Move validity depends on relationship between current card and previous card value",
+            formal_condition="(card > previous_card) or (card < previous_card)",
+            tags=["structural", "comparison", "fallback"],
+            confidence=0.35
         ))
         hypotheses.append(Hypothesis(
-            id=f"fallback-spoken-{len(hypotheses)}",
-            statement="Certain cards require a spoken action",
-            formal_condition="(card % 13 == 7) and (spoken is None or str(spoken).strip() == '')",
-            tags=["action_required", "fallback"],
-            confidence=0.45
+            id=f"fallback-spoken-generic-{len(hypotheses)}",
+            statement="Some moves require non-empty spoken input to be valid",
+            formal_condition="(spoken is None) or (str(spoken).strip() == '')",
+            tags=["spoken", "action_required_generic", "fallback"],
+            confidence=0.35
         ))
-        print(f"Neural Agent: Using {len(hypotheses)} fallback hypotheses")
+        hypotheses.append(Hypothesis(
+            id=f"fallback-round-dependent-{len(hypotheses)}",
+            statement="Rule validity may depend on the current round number",
+            formal_condition="(round % 2 == 0) or (round > 1)",
+            tags=["round", "dynamic", "fallback"],
+            confidence=0.3
+        ))
+        print(f"Neural Agent: Using {len(hypotheses)} generic zero-knowledge fallback hypotheses")
         return hypotheses[:n]
