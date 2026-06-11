@@ -98,3 +98,13 @@ The autonomous researcher (Hermes) has full permission to critique, modify, exte
 **Project Root:** `~/Projects/neuro-symbolic-rule-discovery/`
 
 Begin implementation.
+
+## v0.3 Update (Autonomous Improvement - 2026-06-11)
+**Key Improvement:** Strengthened the experiment selection engine in SymbolicCore. 
+- Now uses hypothesis content (formal_condition + tags) to generate *targeted probe cards* (e.g., card=7 for spoken/action hypotheses, parity boundaries, round-modulo probes).
+- Zero-knowledge case uses diverse high-variance cards.
+- This implements "active experimentation" rigorously and replaces the previous non-functional (always-0) selector.
+- Updated main loop and added LLM fallback for cron/self-improvement reliability.
+- Pushed to GitHub with atomic commits.
+
+This directly addresses the "active experimentation > passive observation" principle and improves the propose→test→verify loop.
