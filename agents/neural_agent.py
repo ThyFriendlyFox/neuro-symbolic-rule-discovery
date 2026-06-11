@@ -120,3 +120,15 @@ Return ONLY a valid JSON array. No explanations."""
             return hypotheses
         except Exception:
             return []
+
+    def respond_to_interrogation(self, questions: List[str], symbolic_core: SymbolicCore) -> List[Dict]:
+        """Respond to Symbolic Core's interrogation questions with new hypotheses or clarifications.
+        This closes the two-agent dialogue loop.
+        """
+        if not questions:
+            return []
+        print(f"Neural Agent: Responding to {len(questions)} interrogation questions from Symbolic Core...")
+        # For now, treat as trigger to generate fresh abstract hypotheses
+        # In future: use LLM to directly answer the meta-questions
+        new_hyps = self.generate_hypotheses(symbolic_core, n=3)
+        return [{"question": q, "response_hypotheses": len(new_hyps)} for q in questions]
