@@ -7,11 +7,13 @@ from .hypothesis import Hypothesis
 from .predicate_evaluator import evaluator
 
 class SymbolicCore:
-    def __init__(self):
+    def __init__(self, prune_min_evidence: int = 5, prune_threshold: float = 0.15):
         self.hypotheses: Dict[str, Hypothesis] = {}
         self.observation_history: List[Dict] = []
         self.round = 0
         self.current_theory_confidence = 0.0
+        self.prune_min_evidence = prune_min_evidence
+        self.prune_threshold = prune_threshold
         print("Symbolic Core initialized - zero knowledge state. Ready for multiple competing hypotheses.")
 
     def add_hypothesis(self, statement: str, formal_condition: str, tags: List[str] = None) -> Hypothesis:
@@ -169,11 +171,15 @@ class SymbolicCore:
             status += f"  {hyp}\n"
         return status
 
-    def prune_low_confidence_hypotheses(self, min_evidence: int = 5, threshold: float = 0.15) -> int:
+    def prune_low_confidence_hypotheses(self, min_evidence: int = None, threshold: float = None) -> int:
         """Prune hypotheses that have accumulated enough evidence but remain very low confidence.
         This prevents hypothesis bloat and focuses the Symbolic Core on promising candidates.
         Directly addresses the 'contradiction pruning' suggestion from prior autonomous run.
         Returns number of hypotheses pruned."""
+        if min_evidence is None:
+            min_evidence = self.prune_min_evidence
+        if threshold is None:
+            threshold = self.prune_threshold
         to_remove = []
         pruned_info = []
         for hyp_id, hyp in list(self.hypotheses.items()):
