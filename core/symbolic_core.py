@@ -1,4 +1,4 @@
-from typing import List, Dict, Any, Tuple
+from typing import List, Dict, Any, Tuple, Optional
 import uuid
 from datetime import datetime
 import random
@@ -52,10 +52,13 @@ class SymbolicCore:
         if hyp_id in self.hypotheses:
             self.hypotheses[hyp_id].update(supports)
 
-    def select_next_experiment(self) -> Tuple[int, str]:
-        """Information-gain based selection — prefers highest uncertainty."""
+    def select_next_experiment(self) -> Tuple[int, Optional[str]]:
+        """Abstract information-gain based selection. Returns (card_suggestion, spoken_suggestion).
+        NO game-specific knowledge or hardcoded card values. Purely uncertainty-driven.
+        The actual move interpreter lives outside (game-agnostic contract)."""
         if not self.hypotheses:
-            return random.choice([7, 8, 12, 1, 13, 4]), None
+            # Zero-knowledge: return neutral placeholder; caller must interpret abstractly
+            return 0, None  # 0 signals 'any valid exploratory card'
 
         scored = []
         for hyp in self.hypotheses.values():
@@ -67,12 +70,13 @@ class SymbolicCore:
 
         print(f"Symbolic Core: Selected hypothesis for testing: {best_hyp.id} (confidence {best_hyp.confidence:.2f}, uncertainty {scored[0][0]:.2f})")
 
-        if "spoken" in best_hyp.tags or "spoken" in best_hyp.statement.lower():
-            return 7, None
-        elif "parity" in best_hyp.tags or "even" in best_hyp.statement.lower():
-            return 4, None
+        # Abstract decision: prefer spoken action if hypothesis mentions action/flag/meta
+        tags_lower = [t.lower() for t in best_hyp.tags]
+        stmt_lower = best_hyp.statement.lower()
+        if any(k in tags_lower + [stmt_lower] for k in ["spoken", "action", "flag", "meta", "say"]):
+            return 0, "ACTION"  # abstract spoken flag
         else:
-            return random.choice([7, 12, 8]), "Mao" if random.random() > 0.5 else None
+            return 0, None  # explore without spoken, let game provide concrete card
 
     def get_top_hypotheses(self, n: int = 6) -> List[Hypothesis]:
         return sorted(self.hypotheses.values(), key=lambda h: h.confidence, reverse=True)[:n]
