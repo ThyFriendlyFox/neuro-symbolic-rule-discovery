@@ -53,42 +53,88 @@ class SymbolicCore:
             self.hypotheses[hyp_id].update(supports)
 
     def select_next_experiment(self) -> Tuple[int, Optional[str]]:
-        """Abstract information-gain based selection. Returns (card_suggestion, spoken_suggestion).
-        NO game-specific knowledge or hardcoded card values. Purely uncertainty-driven.
-        The actual move interpreter lives outside (game-agnostic contract)."""
+        """Improved uncertainty + evidence-based experiment selection.
+        Prioritizes hypotheses with high uncertainty AND low evidence count.
+        Returns abstract (card_suggestion, spoken_suggestion) for game-agnostic use."""
         if not self.hypotheses:
-            # Zero-knowledge: return neutral placeholder; caller must interpret abstractly
-            return 0, None  # 0 signals 'any valid exploratory card'
+            return 0, None
 
         scored = []
         for hyp in self.hypotheses.values():
             uncertainty = 1.0 - abs(hyp.confidence - 0.5)
-            scored.append((uncertainty, hyp))
+            evidence_count = hyp.supporting_evidence + hyp.contradicting_evidence
+            # Information gain proxy: high uncertainty + low evidence = high value
+            info_gain = uncertainty * (1.0 / (evidence_count + 1.5))
+            scored.append((info_gain, hyp.id, hyp))
 
-        scored.sort(reverse=True)
-        best_hyp = scored[0][1]
+        scored.sort(reverse=True, key=lambda x: x[0])
+        best_hyp = scored[0][2]
 
-        print(f"Symbolic Core: Selected hypothesis for testing: {best_hyp.id} (confidence {best_hyp.confidence:.2f}, uncertainty {scored[0][0]:.2f})")
+        print(f"Symbolic Core: Selected hypothesis for testing: {best_hyp.id} (conf {best_hyp.confidence:.2f}, info_gain {scored[0][0]:.3f})")
 
-        # Abstract decision: prefer spoken action if hypothesis mentions action/flag/meta
+        # Abstract decision based on tags/statement
         tags_lower = [t.lower() for t in best_hyp.tags]
         stmt_lower = best_hyp.statement.lower()
-        if any(k in tags_lower + [stmt_lower] for k in ["spoken", "action", "flag", "meta", "say"]):
-            return 0, "ACTION"  # abstract spoken flag
+        if any(k in tags_lower + [stmt_lower] for k in ["spoken", "action", "flag", "say", "action_required"]):
+            return 0, "ACTION"
         else:
-            return 0, None  # explore without spoken, let game provide concrete card
+            return 0, None
 
-    def get_top_hypotheses(self, n: int = 6) -> List[Hypothesis]:
-        return sorted(self.hypotheses.values(), key=lambda h: h.confidence, reverse=True)[:n]
+    def verify_global_consistency(self) -> Dict[str, Any]:
+        """Run verification over observation history to detect contradictions.
+        Returns summary of consistent vs contradicted hypotheses."""
+        if not self.observation_history:
+            return {"consistent": 0, "contradicted": 0, "total": 0}
+
+        consistent = 0
+        contradicted = 0
+        for hyp_id, hyp in self.hypotheses.items():
+            hyp_consistent = True
+            for obs in self.observation_history[-20:]:  # recent window
+                ctx = obs.get("context", {})
+                try:
+                    result = self._safe_eval_condition(hyp.formal_condition, ctx)
+                    expected_penalty = not obs.get("success", True)
+                    if result != expected_penalty:
+                        hyp_consistent = False
+                        break
+                except:
+                    hyp_consistent = False
+            if hyp_consistent:
+                consistent += 1
+            else:
+                contradicted += 1
+        return {"consistent": consistent, "contradicted": contradicted, "total": len(self.hypotheses)}
 
     def calculate_theory_confidence(self) -> float:
         if not self.hypotheses:
             self.current_theory_confidence = 0.0
             return 0.0
-        
-        avg_conf = sum(h.confidence for h in self.hypotheses.values()) / len(self.hypotheses)
-        self.current_theory_confidence = round(avg_conf * 0.9, 4)
+
+        # More rigorous: weighted by evidence strength + average confidence
+        total_evidence = 0
+        weighted_sum = 0.0
+        for h in self.hypotheses.values():
+            ev = h.supporting_evidence + h.contradicting_evidence
+            total_evidence += ev
+            weighted_sum += h.confidence * (ev + 1)
+
+        if total_evidence == 0:
+            avg = sum(h.confidence for h in self.hypotheses.values()) / len(self.hypotheses)
+            self.current_theory_confidence = round(avg * 0.85, 4)
+        else:
+            self.current_theory_confidence = round(weighted_sum / (total_evidence + len(self.hypotheses)), 4)
+
+        # Apply consistency penalty
+        consistency = self.verify_global_consistency()
+        if consistency["total"] > 0:
+            consistency_ratio = consistency["consistent"] / consistency["total"]
+            self.current_theory_confidence *= (0.7 + 0.3 * consistency_ratio)
+
         return self.current_theory_confidence
+
+    def get_top_hypotheses(self, n: int = 6) -> List[Hypothesis]:
+        return sorted(self.hypotheses.values(), key=lambda h: h.confidence, reverse=True)[:n]
 
     def next_round(self):
         self.round += 1
