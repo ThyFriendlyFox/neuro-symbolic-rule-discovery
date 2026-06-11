@@ -108,3 +108,12 @@ Begin implementation.
 - Pushed to GitHub with atomic commits.
 
 This directly addresses the "active experimentation > passive observation" principle and improves the propose→test→verify loop.
+
+## v0.4 Update (Autonomous Self-Improvement Cron - 2026-06-11)
+**Key Improvements identified and implemented:**
+- **Zero-knowledge compliance fix**: Refactored NeuralAgent fallback hypothesis generator to use only abstract, structural predicates over generic variables (card, previous_card, spoken, round). Eliminated all hardcoded test-game-specific literals (e.g. 7, parity patterns matching hidden rules). This was the weakest architectural violation of the "true zero knowledge" mandate.
+- **Two-agent dialogue completion**: Added `generate_interrogation_questions()` to SymbolicCore. Enables the skeptical interrogator role — when confidence <50% or contradictions exist, it produces targeted questions for the Neural Agent about meta-rules, unknown unknowns, and novel ontology. Integrated periodic invocation in main loop for live visibility.
+- Both changes committed atomically and pushed to GitHub immediately.
+- This closes the loop on "Symbolic Core interrogates Neural Agent when data is ambiguous" (SPEC v0.2) and strengthens the neuro-symbolic contract.
+
+These changes were discovered by inspecting running code against the philosophy in AGENTS.md.
