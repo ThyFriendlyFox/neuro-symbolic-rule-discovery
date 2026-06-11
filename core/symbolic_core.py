@@ -164,10 +164,29 @@ class SymbolicCore:
         status = f"Symbolic Core Status (Round {self.round})\n"
         status += f"Theory Confidence: {self.current_theory_confidence:.1%}\n"
         status += f"Hypotheses tracked: {len(self.hypotheses)}\n\n"
+
         for hyp in self.get_top_hypotheses():
             status += f"  {hyp}\n"
         return status
 
+    def prune_low_confidence_hypotheses(self, min_evidence: int = 5, threshold: float = 0.15) -> int:
+        """Prune hypotheses that have accumulated enough evidence but remain very low confidence.
+        This prevents hypothesis bloat and focuses the Symbolic Core on promising candidates.
+        Directly addresses the 'contradiction pruning' suggestion from prior autonomous run.
+        Returns number of hypotheses pruned."""
+        to_remove = []
+        pruned_info = []
+        for hyp_id, hyp in list(self.hypotheses.items()):
+            total_ev = hyp.supporting_evidence + hyp.contradicting_evidence
+            if total_ev >= min_evidence and hyp.confidence < threshold:
+                to_remove.append(hyp_id)
+                pruned_info.append((hyp_id, total_ev, hyp.confidence))
+        for hyp_id, total_ev, conf in pruned_info:
+            del self.hypotheses[hyp_id]
+            print(f"  Symbolic Core: Pruned low-confidence hypothesis {hyp_id} (evidence={total_ev}, conf={conf:.2f})")
+        if to_remove:
+            print(f"  → Pruned {len(to_remove)} contradictory/low-value hypotheses")
+        return len(to_remove)
     def generate_interrogation_questions(self) -> List[str]:
         """When confidence low or contradictions detected, generate targeted questions
         for the Neural Agent to answer. Implements the 'interrogator' role.
