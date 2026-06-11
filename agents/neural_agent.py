@@ -96,6 +96,10 @@ class NeuralAgent:
         if not questions:
             return []
 
+        if SIMULATION_MODE:
+            print("  NeuralAgent: SIMULATION mode active — skipping LLM interrogation (offline mode)")
+            return []
+
         print(f"Neural Agent: Responding to {len(questions)} interrogation questions from Symbolic Core...")
 
         responses = []
@@ -216,5 +220,4 @@ Return ONLY a valid JSON array."""
             ),
         ]
         random.shuffle(candidates)
-        return candidates[:n]
         return candidates[:n]
