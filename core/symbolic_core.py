@@ -167,3 +167,19 @@ class SymbolicCore:
         for hyp in self.get_top_hypotheses():
             status += f"  {hyp}\n"
         return status
+
+    def generate_interrogation_questions(self) -> List[str]:
+        """When confidence low or contradictions detected, generate targeted questions
+        for the Neural Agent to answer. Implements the 'interrogator' role.
+        This strengthens the two-agent dialogue loop (per SPEC v0.2).
+        """
+        questions = []
+        consistency = self.verify_global_consistency()
+        if self.current_theory_confidence < 0.5 or consistency.get("contradicted", 0) > 0:
+            questions.append("What hidden meta-rule or unknown-unknown pattern might explain the recent penalties that contradict current hypotheses?")
+            questions.append("Suggest a new ontological category or variable (beyond card, round, spoken) that could be relevant to rule discovery.")
+        if len(self.hypotheses) < 3:
+            questions.append("Propose a completely novel hypothesis type that has not been considered yet based on observed patterns.")
+        if not questions:
+            questions.append("Are there any higher-order rules about how rules themselves change during play?")
+        return questions
