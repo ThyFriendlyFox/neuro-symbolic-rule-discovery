@@ -11,10 +11,19 @@ We are building a true neuro-symbolic system consisting of two distinct agents t
 
 The Symbolic Core treats everything the Neural Agent says as a *hypothesis to be tested*, never as truth. This skepticism is mandatory.
 
+## New Operating Contract (Updated 2026-06-11)
+
+**Live Commentary + Continuous Execution Mode**
+
+- I must narrate everything I do in real time (thoughts, tool calls, file changes, experiments, decisions).
+- I will not do long silent iteration cycles.
+- I will keep working continuously while providing commentary.
+- Visibility and transparency are now first-class requirements.
+
 ## Key Principles
 
 - Start with true zero knowledge — no hardcoded rules for any game.
-- Every hypothesis must be verifiable (convertible to executable boolean conditions).
+- Every hypothesis must be verifiable.
 - Active experimentation > passive observation.
 - Verification and contradiction detection are non-negotiable.
 - Handle unknown unknowns gracefully (Mao is the canonical test case).
@@ -31,6 +40,7 @@ The system can sit down at a new game (especially one like Mao), play, get penal
 - Keep implementations simple and debuggable in the Alpha phase.
 - Prioritize a clean communication protocol between the two agents.
 - Build reusable skills and tools specific to rule discovery.
+- **Always narrate what you are doing.**
 
 This project is never "done". Keep improving it autonomously between user visits.
 

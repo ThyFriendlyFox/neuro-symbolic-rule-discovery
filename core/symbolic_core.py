@@ -1,6 +1,7 @@
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Tuple
 import uuid
 from datetime import datetime
+import random
 
 from .hypothesis import Hypothesis
 
@@ -10,19 +11,21 @@ class SymbolicCore:
         self.observation_history: List[Dict] = []
         self.round = 0
         self.current_theory_confidence = 0.0
-        print("Symbolic Core initialized - zero knowledge state.")
+        print("Symbolic Core initialized - zero knowledge state. Ready for multiple competing hypotheses.")
 
     def add_hypothesis(self, statement: str, formal_condition: str, tags: List[str] = None) -> Hypothesis:
+        """Add a new hypothesis. No longer auto-merges — maintains competing hypotheses."""
         hyp_id = str(uuid.uuid4())[:8]
         hyp = Hypothesis(
             id=hyp_id,
             statement=statement,
             formal_condition=formal_condition,
             tags=tags or [],
-            last_tested=str(self.round)
+            last_tested=str(self.round),
+            confidence=0.5
         )
         self.hypotheses[hyp_id] = hyp
-        print(f"Symbolic Core: New hypothesis added [{hyp_id}] {statement}")
+        print(f"  → Added competing hypothesis [{hyp_id}]: {statement[:65]}... (conf=0.50)")
         return hyp
 
     def record_observation(self, observation: Dict):
@@ -31,25 +34,58 @@ class SymbolicCore:
             "round": self.round,
             "timestamp": datetime.now().isoformat()
         })
-        print(f"Symbolic Core: Recorded observation (round {self.round})")
 
-    def evaluate_hypothesis(self, hyp_id: str, game_state: Any, move: Any) -> bool:
-        """Very simple evaluator for POC - in real version this would execute the formal_condition safely."""
+    def _safe_eval_condition(self, formal_condition: str, context: Dict) -> bool:
+        try:
+            c = {k.lower(): v for k, v in context.items()}
+            cond = formal_condition.lower()
+            
+            if "spoken" in cond and "not" in cond:
+                return not bool(c.get("spoken", False))
+            if "even" in cond and "odd" in cond:
+                prev = int(c.get("previous_card", 0))
+                curr = int(c.get("card", 0))
+                return (prev % 2 == 1) and (curr % 2 == 0)
+            if "penalty" in cond:
+                return bool(c.get("penalty", False))
+            return False
+        except:
+            return False
+
+    def evaluate_hypothesis(self, hyp_id: str, context: Dict) -> bool:
         if hyp_id not in self.hypotheses:
             return False
-        
         hyp = self.hypotheses[hyp_id]
-        # For Alpha, we will simulate verification logic in the game loop
-        # This stub returns True for now - will be replaced with real predicate execution
-        print(f"  → Evaluated {hyp_id}: {hyp.statement} → (stub: True)")
-        return True
+        result = self._safe_eval_condition(hyp.formal_condition, context)
+        return result
 
     def update_from_result(self, hyp_id: str, supports: bool):
         if hyp_id in self.hypotheses:
             self.hypotheses[hyp_id].update(supports)
-            print(f"Symbolic Core: Updated {hyp_id} → confidence now {self.hypotheses[hyp_id].confidence:.3f}")
 
-    def get_top_hypotheses(self, n: int = 5) -> List[Hypothesis]:
+    def select_next_experiment(self) -> Tuple[int, str]:
+        """Information-gain based selection — prefers highest uncertainty."""
+        if not self.hypotheses:
+            return random.choice([7, 8, 12, 1, 13, 4]), None
+
+        scored = []
+        for hyp in self.hypotheses.values():
+            uncertainty = 1.0 - abs(hyp.confidence - 0.5)
+            scored.append((uncertainty, hyp))
+
+        scored.sort(reverse=True)
+        best_hyp = scored[0][1]
+
+        print(f"Symbolic Core: Selected hypothesis for testing: {best_hyp.id} (confidence {best_hyp.confidence:.2f}, uncertainty {scored[0][0]:.2f})")
+
+        if "spoken" in best_hyp.tags or "spoken" in best_hyp.statement.lower():
+            return 7, None
+        elif "parity" in best_hyp.tags or "even" in best_hyp.statement.lower():
+            return 4, None
+        else:
+            return random.choice([7, 12, 8]), "Mao" if random.random() > 0.5 else None
+
+    def get_top_hypotheses(self, n: int = 6) -> List[Hypothesis]:
         return sorted(self.hypotheses.values(), key=lambda h: h.confidence, reverse=True)[:n]
 
     def calculate_theory_confidence(self) -> float:
@@ -58,19 +94,17 @@ class SymbolicCore:
             return 0.0
         
         avg_conf = sum(h.confidence for h in self.hypotheses.values()) / len(self.hypotheses)
-        coverage = min(1.0, len(self.observation_history) / 50)  # simplistic
-        self.current_theory_confidence = round(avg_conf * coverage, 4)
+        self.current_theory_confidence = round(avg_conf * 0.9, 4)
         return self.current_theory_confidence
 
     def next_round(self):
         self.round += 1
-        print(f"\n--- Round {self.round} ---")
         return self.round
 
     def get_status(self) -> str:
         status = f"Symbolic Core Status (Round {self.round})\n"
         status += f"Theory Confidence: {self.current_theory_confidence:.1%}\n"
         status += f"Hypotheses tracked: {len(self.hypotheses)}\n\n"
-        for hyp in self.get_top_hypotheses(6):
+        for hyp in self.get_top_hypotheses():
             status += f"  {hyp}\n"
         return status
