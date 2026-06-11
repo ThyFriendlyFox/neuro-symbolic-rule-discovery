@@ -7,16 +7,16 @@
     <key>ProgramArguments</key>
     <array>
         <string>/usr/bin/python3</string>
-        <string>/Users/thyfriendlyfox/Projects/neuro-symbolic-rule-discovery/continue.py</string>
+        <string>/Users/thyfriendlyfox/Projects/neuro-symbolic-rule-discovery/supervisor.py</string>
     </array>
     <key>WorkingDirectory</key>
     <string>/Users/thyfriendlyfox/Projects/neuro-symbolic-rule-discovery</string>
     <key>StartInterval</key>
     <integer>600</integer>
     <key>StandardOutPath</key>
-    <string>/Users/thyfriendlyfox/Projects/neuro-symbolic-rule-discovery/cron.log</string>
+    <string>/Users/thyfriendlyfox/Projects/neuro-symbolic-rule-discovery/supervisor.log</string>
     <key>StandardErrorPath</key>
-    <string>/Users/thyfriendlyfox/Projects/neuro-symbolic-rule-discovery/cron.log</string>
+    <string>/Users/thyfriendlyfox/Projects/neuro-symbolic-rule-discovery/supervisor.log</string>
     <key>RunAtLoad</key>
     <true/>
 </dict>

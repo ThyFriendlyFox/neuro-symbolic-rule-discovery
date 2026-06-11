@@ -1490,3 +1490,7 @@ Cycle completed at 07:02:34. Continuing improvement indefinitely.
 [2026-06-11 07:04:51] Git commit created: [main 26e5fc5] star: autonomous improvement cycle 07:04
  3 files changed, 93 insertions(+), 54 deletions(-)
 [2026-06-11 07:04:51] === STAR Improvement Cycle Completed ===
+[2026-06-11 07:08:56] === STAR Improvement Cycle Started ===
+[2026-06-11 07:08:56] Goal written. Attempting to resume dedicated session...
+[2026-06-11 07:08:56] ERROR: 'hermes' command not found in PATH
+[2026-06-11 07:08:56] Committing any changes made during this cycle...
