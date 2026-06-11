@@ -61,7 +61,13 @@ while round_num < MAX_ROUNDS and symbolic.current_theory_confidence < CONFIDENCE
         "previous_card": game.played_cards[-2] if len(game.played_cards) > 1 else 0,
         "spoken": bool(test_spoken),
         "penalty": not success,
-        "round": round_num
+        "round": round_num,
+        # Abstract aliases for NeuralAgent compatibility (zero-knowledge predicates)
+        "state_var": test_card,
+        "action": test_card,
+        "previous_action": game.played_cards[-2] if len(game.played_cards) > 1 else 0,
+        "dealer_response": reason,
+        "history": len(game.played_cards)
     }
 
     symbolic.record_observation({
