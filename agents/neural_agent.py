@@ -166,10 +166,8 @@ Return ONLY a valid JSON array."""
 
     def _generate_fallback_hypotheses(self, n: int = 5) -> List[Hypothesis]:
         """Robust fallback for autonomous cron runs when LLM unavailable.
-        Generates structurally diverse, verifiable hypotheses targeting common
-        unknown rule categories (parity, spoken-action, sequence, modular, meta).
-        Enables continuous improvement without external service dependency.
-        This directly addresses the primary blocker identified in prior runs.
+        Generates structurally diverse, verifiable hypotheses with ZERO knowledge
+        of any specific game rules or card values. All conditions are generic.
         """
         candidates = [
             Hypothesis(
@@ -181,10 +179,10 @@ Return ONLY a valid JSON array."""
             ),
             Hypothesis(
                 id=f"fb-spoken-{random.randint(1000,9999)}",
-                statement="Certain card values require a spoken action or flag to avoid penalty",
-                formal_condition="(state_var == 7 or state_var % 7 == 0) and (action or spoken)",
-                tags=["spoken", "action_required", "7"],
-                confidence=0.55
+                statement="Certain states or actions require a spoken response or flag to avoid penalty",
+                formal_condition="(action or spoken) and (state_var > 0)",
+                tags=["spoken", "action_required"],
+                confidence=0.50
             ),
             Hypothesis(
                 id=f"fb-sequence-{random.randint(1000,9999)}",
@@ -195,19 +193,19 @@ Return ONLY a valid JSON array."""
             ),
             Hypothesis(
                 id=f"fb-modular-{random.randint(1000,9999)}",
-                statement="Rule depends on modular arithmetic (round number or card modulo value)",
-                formal_condition="(round % 4 == 0) or ((state_var % 13) == 1)",
+                statement="Rule depends on modular arithmetic involving round or state value",
+                formal_condition="(round % 3 == 0) or ((state_var % 4) == 0)",
                 tags=["modular", "round", "dynamic"],
                 confidence=0.42
             ),
             Hypothesis(
                 id=f"fb-meta-{random.randint(1000,9999)}",
-                statement="Meta-rule: new rules can be introduced dynamically based on game history length",
-                formal_condition="history > 10 and (dealer_response and 'new' in str(dealer_response).lower())",
+                statement="Meta-rule: new rules or constraints can be introduced dynamically based on history",
+                formal_condition="history > 8 and (dealer_response is not None)",
                 tags=["meta", "dynamic_rule"],
                 confidence=0.35
             ),
         ]
         random.shuffle(candidates)
-        print(f"  NeuralAgent fallback: Generated {min(n, len(candidates))} synthetic hypotheses for autonomous testing")
+        return candidates[:n]
         return candidates[:n]

@@ -9,7 +9,7 @@ import time
 import random
 from core.symbolic_core import SymbolicCore
 from agents.neural_agent import NeuralAgent
-from games.simple_mao import SimpleMaoGame
+from games.real_mao import RealMaoGame
 
 print("=== Neuro-Symbolic Rule Discovery System (Star) - Alpha ===")
 print("Live commentary + continuous execution mode with internal heartbeat.")
@@ -18,7 +18,7 @@ print("Every step is being shown. Not stopping.\n")
 print("Step: Initializing all components...")
 symbolic = SymbolicCore()
 neural = NeuralAgent()
-game = SimpleMaoGame(seed=123)
+game = RealMaoGame(seed=123)
 
 print("All components initialized successfully.")
 print("Starting open-ended continuous discovery (no fixed round limit).\n")
