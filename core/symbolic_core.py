@@ -52,18 +52,18 @@ class SymbolicCore:
         if hyp_id in self.hypotheses:
             self.hypotheses[hyp_id].update(supports)
 
-    def select_next_experiment(self) -> Tuple[int, Optional[str]]:
-        """Improved uncertainty + evidence-based experiment selection.
-        Prioritizes hypotheses with high uncertainty AND low evidence count.
-        Returns abstract (card_suggestion, spoken_suggestion) for game-agnostic use."""
+    def select_next_experiment(self, game_state: Optional[Dict] = None) -> Tuple[int, Optional[str]]:
+        """Strong experiment selection: uses hypothesis to propose concrete test moves.
+        Generates candidate cards likely to falsify/support the formal_condition (boundary testing).
+        Returns (suggested_card, spoken_suggestion). This drives active experimentation."""
         if not self.hypotheses:
-            return 0, None
+            # True zero-knowledge exploration: try diverse cards
+            return random.choice([7, 14, 21, 28, 35, 42, 49, 3, 11, 19]), None
 
         scored = []
         for hyp in self.hypotheses.values():
             uncertainty = 1.0 - abs(hyp.confidence - 0.5)
             evidence_count = hyp.supporting_evidence + hyp.contradicting_evidence
-            # Information gain proxy: high uncertainty + low evidence = high value
             info_gain = uncertainty * (1.0 / (evidence_count + 1.5))
             scored.append((info_gain, hyp.id, hyp))
 
@@ -72,13 +72,33 @@ class SymbolicCore:
 
         print(f"Symbolic Core: Selected hypothesis for testing: {best_hyp.id} (conf {best_hyp.confidence:.2f}, info_gain {scored[0][0]:.3f})")
 
-        # Abstract decision based on tags/statement
         tags_lower = [t.lower() for t in best_hyp.tags]
         stmt_lower = best_hyp.statement.lower()
-        if any(k in tags_lower + [stmt_lower] for k in ["spoken", "action", "flag", "say", "action_required"]):
-            return 0, "ACTION"
+        formal = best_hyp.formal_condition.lower()
+
+        spoken = None
+        card = 0
+
+        # Intelligent card suggestion based on hypothesis content (active testing)
+        if any(k in tags_lower + [stmt_lower, formal] for k in ["spoken", "action", "flag", "say", "action_required", "7"]):
+            card = 7  # Test the classic "say something on 7" rule
+            spoken = "test" if "action" in tags_lower else None
+        elif any(k in tags_lower + [stmt_lower, formal] for k in ["parity", "even", "odd", "modular", "% 2"]):
+            # Test parity boundary
+            card = 14 if random.random() > 0.5 else 15  # even after possible odd
+        elif any(k in tags_lower + [stmt_lower, formal] for k in ["sequence", "previous", "consecutive"]):
+            card = random.randint(1, 52)
+        elif "round" in formal or "dynamic" in tags_lower:
+            card = (self.round % 13) * 4 + 1  # round-dependent probe
         else:
-            return 0, None
+            # Default: high-variance probe cards for unknown unknowns
+            card = random.choice([7, 13, 21, 26, 39, 52, 1, 11, 33])
+
+        if spoken is None and any(k in formal for k in ["spoken", "say", "action"]):
+            spoken = "probe"
+
+        print(f"  → Active experiment: card={card}, spoken='{spoken or ''}' to test '{best_hyp.statement[:50]}...'")
+        return card, spoken
 
     def verify_global_consistency(self) -> Dict[str, Any]:
         """Run verification over observation history to detect contradictions.
