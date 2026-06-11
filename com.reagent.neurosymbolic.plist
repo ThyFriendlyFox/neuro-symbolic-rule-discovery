@@ -11,8 +11,15 @@
     </array>
     <key>WorkingDirectory</key>
     <string>/Users/thyfriendlyfox/Projects/neuro-symbolic-rule-discovery</string>
-    <key>StartInterval</key>
-    <integer>600</integer>
+    <key>StartCalendarInterval</key>
+    <array>
+        <dict><key>Minute</key><integer>0</integer></dict>
+        <dict><key>Minute</key><integer>10</integer></dict>
+        <dict><key>Minute</key><integer>20</integer></dict>
+        <dict><key>Minute</key><integer>30</integer></dict>
+        <dict><key>Minute</key><integer>40</integer></dict>
+        <dict><key>Minute</key><integer>50</integer></dict>
+    </array>
     <key>StandardOutPath</key>
     <string>/Users/thyfriendlyfox/Projects/neuro-symbolic-rule-discovery/supervisor.log</string>
     <key>StandardErrorPath</key>
