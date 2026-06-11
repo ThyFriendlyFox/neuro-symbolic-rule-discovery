@@ -3,6 +3,7 @@ import openai
 import json
 import re
 import random
+import os
 from core.symbolic_core import SymbolicCore
 from core.hypothesis import Hypothesis
 
@@ -15,6 +16,8 @@ client = openai.OpenAI(
     api_key="lm-studio"
 )
 
+SIMULATION_MODE = os.environ.get("NEUROSYMBOLIC_SIMULATION", "0") == "1"
+
 
 class NeuralAgent:
     """
@@ -22,12 +25,14 @@ class NeuralAgent:
     Completely game-agnostic. Works with any turn-based environment
     that provides observations, actions, and penalties.
     Enhanced with robust fallback for fully autonomous cron operation.
+    Supports NEUROSYMBOLIC_SIMULATION=1 env var for fully offline cron runs.
     """
 
     def __init__(self):
         self.observation_buffer: List[Dict] = []
         self.penalty_history: List[Dict] = []
-        print("Neural Agent initialized — connected to Gemma (game-agnostic mode).")
+        mode_str = "SIMULATION (offline, fallback only)" if SIMULATION_MODE else "Gemma (game-agnostic mode)"
+        print(f"Neural Agent initialized — {mode_str}.")
 
     def observe(self, observation: Dict, action_result: Dict):
         entry = {
