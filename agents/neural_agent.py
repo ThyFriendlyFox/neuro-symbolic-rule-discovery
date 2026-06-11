@@ -26,58 +26,59 @@ class NeuralAgent:
             print(f"Neural Agent: PENALTY detected - generating targeted hypotheses")
 
     def generate_hypotheses(self, symbolic_core: SymbolicCore, n: int = 5) -> List[Hypothesis]:
+        """Generate abstract, game-agnostic hypotheses using template patterns.
+        No hardcoded card values, parities, or game-specific strings.
+        Focus on general relations between observed variables."""
         hypotheses = []
         recent_penalties = self.penalty_history[-5:]
 
         if not recent_penalties:
-            # Early exploration hypothesis
+            # Early exploration - purely abstract
             hypotheses.append(Hypothesis(
                 id="explore-001",
-                statement="There exist hidden rules that cause penalties on specific card combinations or actions",
+                statement="Penalties occur under certain unobserved conditions involving card properties and actions",
                 formal_condition="penalty_observed == True",
                 tags=["meta", "exploration"],
-                confidence=0.75
+                confidence=0.60
             ))
             return hypotheses[:n]
 
-        # Analyze the most recent penalty
-        last_penalty_str = str(recent_penalties[-1]).lower()
-
-        if "say a word" in last_penalty_str or "spoken" in last_penalty_str or "7" in last_penalty_str:
-            hypotheses.append(Hypothesis(
-                id="spoken-001",
-                statement="Must say a specific word (like 'Mao') when playing 7s or other special cards",
-                formal_condition="card % 13 == 7 and not spoken",
-                tags=["spoken_rule", "special_card"],
-                confidence=0.85
-            ))
-
-        if "even" in last_penalty_str or "odd" in last_penalty_str or "parity" in last_penalty_str:
-            hypotheses.append(Hypothesis(
-                id="parity-001",
-                statement="Cannot play an even card immediately after an odd card (parity restriction)",
-                formal_condition="previous_card % 2 == 1 and current_card % 2 == 0",
-                tags=["move_restriction", "parity"],
-                confidence=0.82
-            ))
-
-        # Meta hypothesis about rule evolution
+        # Abstract templates - no game knowledge leaked
+        # Template 1: Action flag required for certain cards
         hypotheses.append(Hypothesis(
-            id="meta-dynamic-001",
-            statement="The game can introduce new hidden rules dynamically during play",
-            formal_condition="new_rule_introduced == True",
-            tags=["meta", "dynamic_rules"],
-            confidence=0.65
+            id=f"action-flag-{len(hypotheses)}",
+            statement="Certain card values require an accompanying spoken action or flag to avoid penalty",
+            formal_condition="(card_value_property > 0) and (spoken_flag == False)",
+            tags=["action_required", "general"],
+            confidence=0.55
         ))
 
-        # General pattern hypothesis
+        # Template 2: Sequential dependency
         hypotheses.append(Hypothesis(
-            id="pattern-001",
-            statement="Penalties are triggered by specific combinations of card value, previous card, and spoken words",
-            formal_condition="penalty_pattern_detected == True",
-            tags=["meta", "pattern"],
-            confidence=0.70
+            id=f"sequence-dep-{len(hypotheses)}",
+            statement="The validity of a move depends on a relationship between current and previous card properties",
+            formal_condition="(current_card_property != previous_card_property) and (action_flag == False)",
+            tags=["sequence_rule", "general"],
+            confidence=0.55
         ))
 
-        print(f"Neural Agent: Generated {len(hypotheses)} specific hypotheses this round")
+        # Template 3: Meta - dynamic or hidden state
+        hypotheses.append(Hypothesis(
+            id=f"meta-state-{len(hypotheses)}",
+            statement="The rule set may include hidden state or dynamically activated constraints",
+            formal_condition="hidden_state_active == True",
+            tags=["meta", "dynamic"],
+            confidence=0.50
+        ))
+
+        # Template 4: Composite pattern
+        hypotheses.append(Hypothesis(
+            id=f"composite-{len(hypotheses)}",
+            statement="Penalties arise from conjunction of multiple observable features (card, history, spoken)",
+            formal_condition="(feature_match == True) and (spoken == False)",
+            tags=["composite", "general"],
+            confidence=0.52
+        ))
+
+        print(f"Neural Agent: Generated {len(hypotheses)} abstract game-agnostic hypotheses this round")
         return hypotheses[:n]
