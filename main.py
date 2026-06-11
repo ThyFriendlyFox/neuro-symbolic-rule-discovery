@@ -87,7 +87,7 @@ while round_num < MAX_ROUNDS and symbolic.current_theory_confidence < CONFIDENCE
 
     # Integrate pruning (self-improvement from prior cron suggestion): every 10 rounds prune low-value hypotheses
     if round_num % 10 == 0:
-        pruned = symbolic.prune_low_confidence_hypotheses(min_evidence=5, threshold=0.15)
+        pruned = symbolic.prune_low_confidence_hypotheses()  # uses configured prune_min_evidence / prune_threshold (self-improvement verification)
         if pruned > 0:
             print(f"  🧹 Pruned {pruned} low-confidence hypotheses to keep hypothesis set focused and manageable.")
 
