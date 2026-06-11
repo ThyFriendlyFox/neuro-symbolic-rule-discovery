@@ -109,6 +109,15 @@ Begin implementation.
 
 This directly addresses the "active experimentation > passive observation" principle and improves the propose→test→verify loop.
 
+
+## v0.5 Update (Autonomous Self-Improvement Cron - 2026-06-11)
+**Key Improvement:** Closed the two-agent dialogue loop by integrating interrogation.
+- Added `respond_to_interrogation()` to NeuralAgent.
+- Enriched observation `context` with abstract variable aliases (`state_var`, `action`, `dealer_response`, etc.) so Neural-generated formal_conditions evaluate correctly.
+- This makes Symbolic Core act as active interrogator when confidence <40% or on schedule, triggering new hypothesis generation from Neural.
+- Directly addresses the dormant "interrogator" role identified as the weakest architectural gap.
+- All changes committed atomically and pushed.
+
 ## v0.4 Update (Autonomous Self-Improvement Cron - 2026-06-11)
 **Key Improvements identified and implemented:**
 - **Zero-knowledge compliance fix**: Refactored NeuralAgent fallback hypothesis generator to use only abstract, structural predicates over generic variables (card, previous_card, spoken, round). Eliminated all hardcoded test-game-specific literals (e.g. 7, parity patterns matching hidden rules). This was the weakest architectural violation of the "true zero knowledge" mandate.
