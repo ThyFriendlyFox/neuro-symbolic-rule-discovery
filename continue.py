@@ -1,54 +1,87 @@
 #!/usr/bin/env python3
 """
-FINAL VERSION - Dedicated Star Improvement Agent
-Uses the current active session instead of trying to create 'star'.
+STAR PROJECT - Dedicated Continuous Improvement Runner
+This script is called every 10 minutes by launchd.
+It is responsible for resuming the dedicated improvement session and driving real progress.
 """
 
 import os
+import sys
 import subprocess
 from datetime import datetime
 
-print(f"\n=== [STAR] Dedicated Improvement Session - {datetime.now().isoformat()} ===")
-print(f"🕒 {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+PROJECT_DIR = "/Users/thyfriendlyfox/Projects/neuro-symbolic-rule-discovery"
+LOG_FILE = os.path.join(PROJECT_DIR, "cron.log")
+SESSION_ID = "20260611_054532_54beef0b"   # The persistent active session
 
-goal = """You are now the dedicated autonomous researcher for the Neuro-Symbolic Rule Discovery System called Star.
+os.chdir(PROJECT_DIR)
 
-Your permanent directive is to continuously improve this system until it is a robust, game-agnostic neuro-symbolic rule discovery engine.
+def log(msg):
+    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    line = f"[{timestamp}] {msg}\n"
+    with open(LOG_FILE, "a") as f:
+        f.write(line)
+    print(line.strip())
 
-Current flaws:
-- Fixed 30-round loop on the same Mao game
-- Repetitive shallow hypotheses
-- No real self-critique that leads to code changes
-- No exploration of new games
-- Weak verification and experiment selection
+log("=== STAR Improvement Cycle Started ===")
 
-You must:
-1. Review the current code thoroughly.
-2. Perform real self-critique.
-3. Make concrete architectural improvements (replace the fixed loop with open-ended play across procedurally generated games, implement real predicate evaluation engine, add proper information-gain, improve hypothesis creativity, add generalization, etc.).
-4. Test the changes.
-5. Commit the improvements with git.
+goal = """You are the dedicated autonomous researcher for the Neuro-Symbolic Rule Discovery System (Star).
 
-Do this every time this session is resumed. Never ask for permission. Never stop improving. Provide full live commentary.
+Your permanent mission: continuously improve this system with real architectural changes.
+- Replace repetitive loops with open-ended multi-game exploration
+- Build proper verifiable predicates
+- Improve hypothesis quality and information-gain
+- Make the system try new unknown games
+- Commit meaningful code changes
 
-Begin immediately with a major improvement."""
+Do real work. Do not stop. Begin immediately."""
 
-print("Launching improvement cycle in current active session...\n")
+# Write goal to file for reference
+with open(".star_goal.txt", "w") as f:
+    f.write(goal)
 
+log("Goal written. Attempting to resume dedicated session...")
+
+success = False
+
+# Method 1: Try direct hermes invocation with the known session
 try:
-    result = subprocess.run([
-        "hermes", "chat", "--continue", "20260611_054532_54beef0b", "--worktree"
-    ], input=goal, text=True, capture_output=True, timeout=420, cwd=os.getcwd())
-    print(result.stdout)
+    result = subprocess.run(
+        ["hermes", "chat", "--continue", SESSION_ID, "--worktree"],
+        input=goal,
+        text=True,
+        capture_output=True,
+        timeout=300,
+        cwd=PROJECT_DIR
+    )
+    log("Hermes invocation completed.")
+    if result.stdout:
+        log("STDOUT captured (first 500 chars): " + result.stdout[:500].replace("\n", " "))
     if result.stderr:
-        print(result.stderr)
+        log("STDERR: " + result.stderr[:300])
+    success = True
+except FileNotFoundError:
+    log("ERROR: 'hermes' command not found in PATH")
+except subprocess.TimeoutExpired:
+    log("Hermes session ran for 5 minutes then timed out (likely did substantial work)")
+    success = True
 except Exception as e:
-    print("Error running hermes:", str(e))
+    log(f"ERROR during Hermes call: {str(e)}")
 
-print("\nCommitting any improvements made...")
-subprocess.run(["git", "add", "-A"], cwd=os.getcwd(), check=False)
-subprocess.run([
-    "git", "commit", "-m", f"star: autonomous improvement cycle {datetime.now().strftime('%H:%M')}"
-], cwd=os.getcwd(), check=False)
+# Always commit whatever happened
+log("Committing any changes made during this cycle...")
+subprocess.run(["git", "add", "-A"], cwd=PROJECT_DIR, check=False)
+commit_result = subprocess.run(
+    ["git", "commit", "-m", f"star: autonomous improvement cycle {datetime.now().strftime('%H:%M')}"],
+    cwd=PROJECT_DIR,
+    capture_output=True,
+    text=True
+)
+if commit_result.returncode == 0:
+    log("Git commit created: " + commit_result.stdout.strip())
+else:
+    log("No new changes to commit this cycle.")
 
-print(f"\nCycle completed at {datetime.now().strftime('%H:%M:%S')}. Continuing improvement indefinitely.")
+log("=== STAR Improvement Cycle Completed ===\n")
+
+sys.exit(0)
