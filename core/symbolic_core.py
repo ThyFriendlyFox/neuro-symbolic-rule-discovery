@@ -99,7 +99,7 @@ class SymbolicCore:
         # Exploration bonus (20% chance) for unknown unknowns: force completely random card
         # to escape hypothesis lock-in and discover unanticipated rules (key for Mao).
         if random.random() < 0.20:
-            card = random.randint(0, 51)
+            card = random.randint(1, 52)
             spoken = None
             print("  → EXPLORATION MODE (unknown-unknown probe): forcing high-entropy random card")
 
