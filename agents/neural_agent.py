@@ -49,6 +49,10 @@ class NeuralAgent:
         recent_penalties = self.penalty_history[-6:]
         recent_obs = self.observation_buffer[-10:] if self.observation_buffer else []
 
+        if SIMULATION_MODE:
+            print("  NeuralAgent: SIMULATION mode active — using only fallback hypotheses (no LLM calls)")
+            return self._generate_fallback_hypotheses(n)
+
         if not recent_penalties and not recent_obs:
             # Bootstrap with fallback for true zero-knowledge autonomous start
             print("  NeuralAgent: No observations yet — bootstrapping with fallback hypotheses")
