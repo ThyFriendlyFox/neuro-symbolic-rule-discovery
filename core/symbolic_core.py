@@ -4,6 +4,7 @@ from datetime import datetime
 import random
 
 from .hypothesis import Hypothesis
+from .predicate_evaluator import evaluator
 
 class SymbolicCore:
     def __init__(self):
@@ -36,21 +37,9 @@ class SymbolicCore:
         })
 
     def _safe_eval_condition(self, formal_condition: str, context: Dict) -> bool:
-        try:
-            c = {k.lower(): v for k, v in context.items()}
-            cond = formal_condition.lower()
-            
-            if "spoken" in cond and "not" in cond:
-                return not bool(c.get("spoken", False))
-            if "even" in cond and "odd" in cond:
-                prev = int(c.get("previous_card", 0))
-                curr = int(c.get("card", 0))
-                return (prev % 2 == 1) and (curr % 2 == 0)
-            if "penalty" in cond:
-                return bool(c.get("penalty", False))
-            return False
-        except:
-            return False
+        """Delegates to the real PredicateEvaluator."""
+        normalized_context = {k.lower(): v for k, v in context.items()}
+        return evaluator.evaluate(formal_condition, normalized_context)
 
     def evaluate_hypothesis(self, hyp_id: str, context: Dict) -> bool:
         if hyp_id not in self.hypotheses:
