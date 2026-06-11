@@ -93,8 +93,15 @@ class SymbolicCore:
         elif "round" in formal or "dynamic" in tags_lower:
             card = (self.round % 13) * 4 + 1  # round-dependent probe
         else:
-            # Default: high-variance probe cards for unknown unknowns
+            # Default: high-variance probe cards for unknown unknowns (enhanced with exploration)
             card = random.choice([7, 13, 21, 26, 39, 52, 1, 11, 33])
+
+        # Exploration bonus (20% chance) for unknown unknowns: force completely random card
+        # to escape hypothesis lock-in and discover unanticipated rules (key for Mao).
+        if random.random() < 0.20:
+            card = random.randint(0, 51)
+            spoken = None
+            print("  → EXPLORATION MODE (unknown-unknown probe): forcing high-entropy random card")
 
         if spoken is None and any(k in formal for k in ["spoken", "say", "action"]):
             spoken = "probe"
