@@ -28,10 +28,6 @@ class NeuralAgent:
         print("Neural Agent initialized — connected to Gemma (game-agnostic mode).")
 
     def observe(self, observation: Dict, action_result: Dict):
-        """
-        Record an observation from the environment.
-        The environment is treated as a black box with a dealer.
-        """
         entry = {
             "observation": observation,
             "result": action_result,
@@ -44,7 +40,6 @@ class NeuralAgent:
             print(f"Neural Agent: Penalty detected — querying Gemma for hypotheses")
 
     def generate_hypotheses(self, symbolic_core: SymbolicCore, n: int = 5) -> List[Hypothesis]:
-        """Ask Gemma to generate abstract, game-agnostic hypotheses."""
         recent_penalties = self.penalty_history[-6:]
         recent_obs = self.observation_buffer[-10:] if self.observation_buffer else []
 
@@ -82,6 +77,53 @@ class NeuralAgent:
             print(f"Neural Agent (Gemma) error: {e}")
             return []
 
+    def respond_to_interrogation(self, questions: List[str], symbolic_core: SymbolicCore) -> List[Dict]:
+        """Respond to Symbolic Core's interrogation questions using Gemma.
+        This properly closes the two-agent dialogue loop.
+        """
+        if not questions:
+            return []
+
+        print(f"Neural Agent: Responding to {len(questions)} interrogation questions from Symbolic Core...")
+
+        responses = []
+        for question in questions:
+            try:
+                prompt = f"""You are the Neural Agent in a neuro-symbolic rule discovery system.
+You have been asked the following meta-question by the Symbolic Core:
+
+"{question}"
+
+Answer thoughtfully and propose 1-2 new abstract hypotheses that could help resolve the ambiguity or contradiction.
+Return only a JSON object with keys: "answer", "new_hypotheses" (list of strings)."""
+
+                response = client.chat.completions.create(
+                    model=LMSTUDIO_MODEL,
+                    messages=[
+                        {"role": "system", "content": "You are a precise, game-agnostic hypothesis generator."},
+                        {"role": "user", "content": prompt}
+                    ],
+                    temperature=0.7,
+                    max_tokens=400,
+                )
+
+                content = response.choices[0].message.content.strip()
+                match = re.search(r'\{.*\}', content, re.DOTALL)
+                if match:
+                    data = json.loads(match.group(0))
+                    responses.append({
+                        "question": question,
+                        "answer": data.get("answer", ""),
+                        "new_hypotheses": data.get("new_hypotheses", [])
+                    })
+                else:
+                    responses.append({"question": question, "answer": content, "new_hypotheses": []})
+
+            except Exception as e:
+                responses.append({"question": question, "answer": f"Error: {e}", "new_hypotheses": []})
+
+        return responses
+
     def _build_abstract_prompt(self, observations: List[Dict], penalties: List[Dict]) -> str:
         return f"""Environment observations (last 10):
 {json.dumps(observations, indent=2)}
@@ -94,10 +136,10 @@ You do not know what game this is. Generate 5 diverse, abstract hypotheses about
 Each hypothesis must be a JSON object with:
 - "statement": natural language description of a possible rule
 - "formal_condition": a logical expression using variables like state_var, action, previous_action, penalty, dealer_response, history
-- "tags": list of abstract categories (e.g. "temporal", "state_dependent", "action_constraint")
+- "tags": list of abstract categories
 - "confidence": float 0.35–0.75
 
-Return ONLY a valid JSON array. No explanations."""
+Return ONLY a valid JSON array."""
 
     def _parse_hypotheses(self, content: str) -> List[Hypothesis]:
         match = re.search(r'\[.*\]', content, re.DOTALL)
@@ -120,15 +162,3 @@ Return ONLY a valid JSON array. No explanations."""
             return hypotheses
         except Exception:
             return []
-
-    def respond_to_interrogation(self, questions: List[str], symbolic_core: SymbolicCore) -> List[Dict]:
-        """Respond to Symbolic Core's interrogation questions with new hypotheses or clarifications.
-        This closes the two-agent dialogue loop.
-        """
-        if not questions:
-            return []
-        print(f"Neural Agent: Responding to {len(questions)} interrogation questions from Symbolic Core...")
-        # For now, treat as trigger to generate fresh abstract hypotheses
-        # In future: use LLM to directly answer the meta-questions
-        new_hyps = self.generate_hypotheses(symbolic_core, n=3)
-        return [{"question": q, "response_hypotheses": len(new_hyps)} for q in questions]
