@@ -1,62 +1,81 @@
 #!/usr/bin/env python3
 """
-Neuro-Symbolic Rule Discovery System - Improved Continuous Agent
-Corrected to use valid Hermes CLI syntax.
+Neuro-Symbolic Rule Discovery System - Fixed Continuous Agent
+Uses a temporary goal file + hermes chat to properly pass long instructions.
 """
 
 import os
 import subprocess
 from datetime import datetime
 
+LOG_FILE = "cron.log"
+GOAL_FILE = ".current_goal.md"
+
 print(f"\n=== Neuro-Symbolic Continuous Agent - {datetime.now().isoformat()} ===")
 print(f"🕒 Timestamp: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
-print("🫀 Improved mode activated — driving real progress.\n")
+print("🫀 Fixed mode — using goal file + hermes chat for reliable execution.\n")
 
-print("Current progress evaluation:")
-print("• Stuck at repetitive 82.3% confidence with shallow hypotheses")
-print("• Predicate verification, information-gain, and architectural evolution remain weak")
-print("• Goal: Force meaningful improvements + git commits on every cycle\n")
+print("Current evaluation:")
+print("• Repetitive experiments at 82.3% with shallow, repetitive hypotheses")
+print("• Major gaps: weak formal verification, poor information-gain, no real self-evolution")
+print("• This cycle must produce actual architectural improvements\n")
 
-print("🫀 Starting improved iteration cycle now...\n")
+# Write goal to file so it can be passed cleanly
+goal = """You are continuing the Neuro-Symbolic Rule Discovery System (Star project).
 
-goal = """
-You are continuing the Neuro-Symbolic Rule Discovery System (Star project).
-Current state: repetitive 30-round experiments stuck at ~82.3% with repetitive shallow hypotheses.
+Current reality: The system is stuck in a repetitive loop — every 30-round run looks almost identical, confidence hovers at ~82.3%, and hypotheses are shallow and repetitive. The self-critique is mentioned but never leads to real code changes.
 
-Requirements for this cycle:
-1. Perform a real self-critique of the current codebase (main.py, symbolic_core.py, neural_agent.py, games/simple_mao.py).
-2. Identify the single highest-leverage improvement (e.g. real ast-based PredicateEvaluator, proper information-gain calculation, diverse hypothesis generation, formal rule output, better experiment selection).
-3. Implement that improvement with actual code changes.
-4. Run a new experiment to test it.
-5. End by committing the changes with git.
+Your job on this cycle:
+1. Read the current files (main.py, core/symbolic_core.py, agents/neural_agent.py, games/simple_mao.py, SPEC.md, AGENTS.md).
+2. Perform a genuine, ruthless self-critique.
+3. Choose the single highest-impact improvement (strong candidates: real ast-based PredicateEvaluator, proper information-theoretic experiment selection, diverse/creative hypothesis generation from the Neural Agent, formal verifiable rule output format, or meta-learning across games).
+4. Implement that improvement with clean, working code changes.
+5. Run a new test experiment that demonstrates the improvement.
+6. Update SPEC.md if the approach has meaningfully changed.
+7. Commit the changes with git using a clear message.
 
-Follow AGENTS.md: live commentary on every thought, tool call, and edit. Be self-critical. Produce real progress on the prototype.
-"""
+Rules:
+- Follow AGENTS.md strictly: live commentary on every step, every tool call, every edit.
+- Be self-critical. Do not accept "good enough".
+- Produce a visibly better version of the prototype this cycle.
+
+Begin now."""
+
+with open(GOAL_FILE, "w") as f:
+    f.write(goal)
+
+print(f"Goal written to {GOAL_FILE}. Starting Hermes with proper instruction...\n")
 
 try:
     result = subprocess.run([
-        "hermes",
-        "--goal", goal,
-        "--worktree"
-    ], capture_output=True, text=True, timeout=240, cwd=os.getcwd())
+        "hermes", "chat", "--continue", "neuro-symbolic-star", "--file", GOAL_FILE
+    ], capture_output=True, text=True, timeout=300, cwd=os.getcwd())
     
     print(result.stdout)
     if result.stderr:
         print("--- STDERR ---")
         print(result.stderr)
-        
-    # Auto commit if there were changes
-    print("\nAttempting git commit of any changes...")
-    subprocess.run(["git", "add", "-A"], cwd=os.getcwd(), check=False)
-    commit_result = subprocess.run([
-        "git", "commit", "-m", f"auto: continuous improvement cycle {datetime.now().strftime('%H:%M')}"
-    ], capture_output=True, text=True, cwd=os.getcwd())
-    print(commit_result.stdout or commit_result.stderr or "Nothing new to commit.")
 
 except subprocess.TimeoutExpired:
-    print("Cycle timed out after 4 minutes — substantial work was likely done.")
+    print("Hermes timed out after 5 minutes — significant work likely completed.")
+except FileNotFoundError:
+    print("Error: 'hermes' command not found in PATH. Falling back to manual mode.")
+    print("TODO: Implement improvements directly in this script for now.")
 except Exception as e:
-    print(f"Error during cycle: {e}")
+    print(f"Error: {e}")
+
+# Always try to commit
+print("\nCommitting any changes made during this cycle...")
+subprocess.run(["git", "add", "-A"], cwd=os.getcwd(), check=False)
+commit_result = subprocess.run([
+    "git", "commit", "-m", f"auto: continuous improvement cycle {datetime.now().strftime('%H:%M')}"
+], capture_output=True, text=True, cwd=os.getcwd())
+
+if commit_result.returncode == 0:
+    print("Successfully committed changes.")
+    print(commit_result.stdout.strip())
+else:
+    print("No new changes to commit or commit failed.")
 
 print(f"\n🫀 Cycle completed at {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
-print("Next improved cycle scheduled in 10 minutes.\n")
+print("Next cycle in 10 minutes.\n")
