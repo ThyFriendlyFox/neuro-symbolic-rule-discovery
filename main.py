@@ -50,7 +50,7 @@ while round_num < MAX_ROUNDS and symbolic.current_theory_confidence < CONFIDENCE
             tags=hyp.tags
         )
 
-    test_card, test_spoken = symbolic.select_next_experiment()
+    test_card, test_spoken = symbolic.select_next_experiment(state)
 
     print(f"Symbolic Core selected test move: card={test_card}, spoken='{test_spoken or ''}'")
 
