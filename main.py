@@ -21,16 +21,21 @@ neural = NeuralAgent()
 game = SimpleMaoGame(seed=123)
 
 print("All components initialized successfully.")
-print("Starting continuous experiment with multiple competing hypotheses.\n")
+print("Starting open-ended continuous discovery (no fixed round limit).\n")
 print("="*90)
 
+MAX_ROUNDS = 120          # Safety cap
+CONFIDENCE_TARGET = 0.90  # Stop a game once we reach this
+
 heartbeat_counter = 0
+round_num = 0
 
-for round_num in range(30):
+while round_num < MAX_ROUNDS and symbolic.current_theory_confidence < CONFIDENCE_TARGET:
+    round_num += 1
     heartbeat_counter += 1
-    print(f"\n[Round {round_num + 1}] 🫀")
+    print(f"\n[Round {round_num}] 🫀")
 
-    if heartbeat_counter % 5 == 0:
+    if heartbeat_counter % 10 == 0:
         print("🫀 HEARTBEAT: Still actively iterating on the neuro-symbolic system.")
 
     state = game.get_state()
@@ -77,12 +82,11 @@ for round_num in range(30):
     print(f"Result: {'✓ Success' if success else '✗ PENALTY'} → {reason}")
     print(f"Current theory confidence: {symbolic.current_theory_confidence:.1%}")
 
-    time.sleep(0.6)
+    time.sleep(0.4)
 
 print("\n" + "="*90)
-print("30-round experiment completed.")
+print(f"Run ended after {round_num} rounds.")
+print(f"Final theory confidence: {symbolic.current_theory_confidence:.1%}")
 print(symbolic.get_status())
-print("\n🫀 HEARTBEAT: Continuing without stopping.")
-print("Next: I will begin self-critique of the current architecture as required by SPEC.md")
-print("and decide on the next major improvement.")
+print("\n🫀 Ready for next phase (new game generation + real predicate evaluation).")
 print("Still in continuous live commentary mode - not stopping.")
