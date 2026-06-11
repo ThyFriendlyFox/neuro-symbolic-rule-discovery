@@ -88,6 +88,18 @@ while round_num < MAX_ROUNDS and symbolic.current_theory_confidence < CONFIDENCE
     print(f"Result: {'✓ Success' if success else '✗ PENALTY'} → {reason}")
     print(f"Current theory confidence: {symbolic.current_theory_confidence:.1%}")
 
+    # Integrate interrogation: close the two-agent dialogue loop (fixes missing integration)
+    if round_num % 5 == 0 or symbolic.current_theory_confidence < 0.4:
+        questions = symbolic.generate_interrogation_questions()
+        if questions:
+            responses = neural.respond_to_interrogation(questions, symbolic)
+            print(f"  Interrogation cycle: {len(questions)} questions → {len(responses)} responses")
+            # Generate fresh hypotheses from responses
+            extra_hyps = neural.generate_hypotheses(symbolic, n=2)
+            for hyp in extra_hyps:
+                symbolic.add_hypothesis(hyp.statement, hyp.formal_condition, hyp.tags)
+
+    symbolic.next_round()
     time.sleep(0.4)
 
 print("\n" + "="*90)
