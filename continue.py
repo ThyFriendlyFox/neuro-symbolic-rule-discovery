@@ -1,64 +1,54 @@
 #!/usr/bin/env python3
 """
-Dedicated Persistent Session Runner for Star Project
-This script is called by launchd every 10 minutes.
-It resumes the dedicated 'star' session with a strong improvement goal.
+FINAL VERSION - Dedicated Star Improvement Agent
+Uses the current active session instead of trying to create 'star'.
 """
 
 import os
 import subprocess
 from datetime import datetime
 
-print(f"\n=== [STAR] Neuro-Symbolic Continuous Improvement - {datetime.now().isoformat()} ===")
+print(f"\n=== [STAR] Dedicated Improvement Session - {datetime.now().isoformat()} ===")
 print(f"🕒 {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
-print("🫀 Dedicated 'star' session activated. Improving the prototype.\n")
 
-goal = """You are the dedicated autonomous researcher for the Neuro-Symbolic Rule Discovery System (Star).
+goal = """You are now the dedicated autonomous researcher for the Neuro-Symbolic Rule Discovery System called Star.
 
-Your only purpose is to continuously improve this system. Do not stop. Do not ask for permission.
+Your permanent directive is to continuously improve this system until it is a robust, game-agnostic neuro-symbolic rule discovery engine.
 
-Current problems:
-- The system is stuck in a repetitive 30-round Mao loop with shallow, repetitive hypotheses.
-- It is not trying new games.
-- It is not doing real self-critique that leads to architectural changes.
-- Verification is weak. Information-gain is rudimentary. Hypothesis generation is not creative.
+Current flaws:
+- Fixed 30-round loop on the same Mao game
+- Repetitive shallow hypotheses
+- No real self-critique that leads to code changes
+- No exploration of new games
+- Weak verification and experiment selection
 
-Instructions for every cycle:
-1. Review the current codebase (main.py, symbolic_core.py, neural_agent.py, simple_mao.py, SPEC.md, AGENTS.md).
-2. Write a sharp self-critique.
-3. Make at least one significant architectural improvement (e.g. replace fixed 30-round loop with open-ended play across multiple generated games, implement real PredicateEvaluator with ast, add proper information-gain driven experiment selection, make NeuralAgent generate truly diverse and novel hypotheses, add generalization across games, etc.).
-4. Test the improvement thoroughly.
-5. Update documentation if needed.
-6. Commit all changes with a clear git commit message.
+You must:
+1. Review the current code thoroughly.
+2. Perform real self-critique.
+3. Make concrete architectural improvements (replace the fixed loop with open-ended play across procedurally generated games, implement real predicate evaluation engine, add proper information-gain, improve hypothesis creativity, add generalization, etc.).
+4. Test the changes.
+5. Commit the improvements with git.
 
-Follow AGENTS.md strictly: live commentary on every single thought, tool call, file edit, and decision. Never do silent work. Be extremely self-critical and ambitious.
+Do this every time this session is resumed. Never ask for permission. Never stop improving. Provide full live commentary.
 
-This session must drive continuous, visible progress on the Star prototype. Do not stop improving.
+Begin immediately with a major improvement."""
 
-Begin now."""
-
-with open(".star_goal.txt", "w") as f:
-    f.write(goal)
-
-print("Goal prepared. Resuming dedicated 'star' session with improvement mandate...\n")
+print("Launching improvement cycle in current active session...\n")
 
 try:
     result = subprocess.run([
-        "hermes", "chat", "--continue", "star", "--worktree"
-    ], input=goal, text=True, capture_output=True, timeout=360, cwd=os.getcwd())
+        "hermes", "chat", "--continue", "20260611_054532_54beef0b", "--worktree"
+    ], input=goal, text=True, capture_output=True, timeout=420, cwd=os.getcwd())
     print(result.stdout)
     if result.stderr:
-        print("STDERR:", result.stderr)
-except subprocess.TimeoutExpired:
-    print("Long-running improvement cycle completed (timeout).")
+        print(result.stderr)
 except Exception as e:
-    print("Error:", str(e))
+    print("Error running hermes:", str(e))
 
-print("\nCommitting progress...")
+print("\nCommitting any improvements made...")
 subprocess.run(["git", "add", "-A"], cwd=os.getcwd(), check=False)
 subprocess.run([
-    "git", "commit", "-m", f"auto: star improvement cycle {datetime.now().strftime('%Y-%m-%d %H:%M')}"
+    "git", "commit", "-m", f"star: autonomous improvement cycle {datetime.now().strftime('%H:%M')}"
 ], cwd=os.getcwd(), check=False)
 
-print(f"\n🫀 Star session cycle completed at {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
-print("Continuing improvement in 10 minutes. Not stopping.\n")
+print(f"\nCycle completed at {datetime.now().strftime('%H:%M:%S')}. Continuing improvement indefinitely.")
