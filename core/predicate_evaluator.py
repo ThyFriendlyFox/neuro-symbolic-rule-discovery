@@ -18,8 +18,8 @@ class PredicateEvaluator:
     ALLOWED_NODES = (
         ast.Expression, ast.BoolOp, ast.BinOp, ast.UnaryOp,
         ast.Compare, ast.Name, ast.Load, ast.Constant,
-        ast.Num, ast.Str, ast.NameConstant, ast.Call,
-        ast.Attribute, ast.Subscript, ast.Index
+        ast.Call, ast.Attribute, ast.Subscript,
+        ast.List, ast.Tuple, ast.Dict, ast.Slice
     )
 
     def __init__(self):
