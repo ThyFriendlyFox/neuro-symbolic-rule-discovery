@@ -81,24 +81,26 @@ class SymbolicCore:
         spoken = None
         card = 0
 
-        # Intelligent card suggestion based on hypothesis content (active testing)
-        if any(k in tags_lower + [stmt_lower, formal] for k in ["spoken", "action", "flag", "say", "action_required", "7"]):
-            card = 7  # Test the classic "say something on 7" rule
-            spoken = "test" if "action" in tags_lower else None
+        # Game-agnostic experiment selection (strictly zero-knowledge, no Mao-specific card values like 7).
+        # Uses abstract strategies based on hypothesis tags and content only. No game knowledge encoded.
+        if any(k in tags_lower + [stmt_lower, formal] for k in ["spoken", "action", "flag", "say", "action_required"]):
+            # Suggest spoken action for hypotheses about required verbal/meta responses (generic)
+            card = random.randint(1, 52)
+            spoken = "probe" if "action" in tags_lower else "test"
         elif any(k in tags_lower + [stmt_lower, formal] for k in ["parity", "even", "odd", "modular", "% 2"]):
-            # Test parity boundary
-            card = 14 if random.random() > 0.5 else 15  # even after possible odd
+            # Parity/modular boundary test using generic integers
+            card = 14 if random.random() > 0.5 else 15
         elif any(k in tags_lower + [stmt_lower, formal] for k in ["sequence", "previous", "consecutive"]):
             card = random.randint(1, 52)
         elif "round" in formal or "dynamic" in tags_lower:
-            card = (self.round % 13) * 4 + 1  # round-dependent probe
+            card = (self.round % 13) * 4 + 1  # generic modular
         else:
-            # Default: high-variance probe cards for unknown unknowns (enhanced with exploration)
-            card = random.choice([7, 13, 21, 26, 39, 52, 1, 11, 33])
+            # Default: high-variance random probes for unknown unknowns and exploration
+            card = random.choice([3, 11, 19, 27, 33, 41, 49, 52, 1, 13])
 
-        # Exploration bonus (20% chance) for unknown unknowns: force completely random card
-        # to escape hypothesis lock-in and discover unanticipated rules (key for Mao).
-        if random.random() < 0.20:
+        # Exploration bonus (25% chance) for unknown unknowns: force completely random card
+        # to escape hypothesis lock-in and discover unanticipated rules.
+        if random.random() < 0.25:
             card = random.randint(1, 52)
             spoken = None
             print("  → EXPLORATION MODE (unknown-unknown probe): forcing high-entropy random card")
