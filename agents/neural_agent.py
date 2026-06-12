@@ -218,6 +218,13 @@ Return ONLY a valid JSON array."""
                 tags=["meta", "dynamic_rule"],
                 confidence=0.35
             ),
+            Hypothesis(
+                id=f"fb-unknown-{random.randint(1000,9999)}",
+                statement="Unknown-unknown: rule may depend on untracked state variables such as cumulative penalties or player-specific history",
+                formal_condition="cumulative_penalty > 2 or (player_state != previous_player_state)",
+                tags=["unknown_unknown", "hidden_state", "exploratory"],
+                confidence=0.30
+            ),
         ]
         random.shuffle(candidates)
         return candidates[:n]
