@@ -7,13 +7,16 @@ from .hypothesis import Hypothesis
 from .predicate_evaluator import evaluator
 
 class SymbolicCore:
-    def __init__(self, prune_min_evidence: int = 5, prune_threshold: float = 0.15):
+    def __init__(self, prune_min_evidence: int = 5, prune_threshold: float = 0.15,
+                 exploration_rate: float = 0.30, verification_window: int = 20):
         self.hypotheses: Dict[str, Hypothesis] = {}
         self.observation_history: List[Dict] = []
         self.round = 0
         self.current_theory_confidence = 0.0
         self.prune_min_evidence = prune_min_evidence
         self.prune_threshold = prune_threshold
+        self.exploration_rate = exploration_rate
+        self.verification_window = verification_window
         print("Symbolic Core initialized - zero knowledge state. Ready for multiple competing hypotheses.")
 
     def add_hypothesis(self, statement: str, formal_condition: str, tags: List[str] = None) -> Hypothesis:
@@ -90,9 +93,9 @@ class SymbolicCore:
             # Default and all other cases: uniform random for unknown unknowns
             card = random.randint(1, 52)
 
-        # Exploration bonus (30% chance) for unknown unknowns: force completely random card
+        # Exploration bonus (configurable rate) for unknown unknowns: force completely random card
         # to escape hypothesis lock-in and discover unanticipated rules.
-        if random.random() < 0.30:
+        if random.random() < self.exploration_rate:
             card = random.randint(1, 52)
             spoken = None
             print("  → EXPLORATION MODE (unknown-unknown probe): forcing high-entropy random card")
@@ -113,7 +116,7 @@ class SymbolicCore:
         contradicted = 0
         for hyp_id, hyp in self.hypotheses.items():
             hyp_consistent = True
-            for obs in self.observation_history[-20:]:  # recent window
+            for obs in self.observation_history[-self.verification_window:]:  # configurable recent window
                 ctx = obs.get("context", {})
                 try:
                     result = self._safe_eval_condition(hyp.formal_condition, ctx)

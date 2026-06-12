@@ -4,25 +4,27 @@
 
 **What was changed / Improvement work performed:**
 - Performed full project health scan: syntax verification (py_compile) on all Python files → PASSED.
-- Inspected error_log.md and previous last_run.md: previous run claimed full removal of numeric deck biases, but code inspection revealed residual `(self.round % 52) + 1` in `select_next_experiment()` (core/symbolic_core.py:90). This was a subtle but critical violation of the strict game-agnostic / zero-knowledge contract.
-- **Error detected and fixed:** Lingering deck-size encoding (mod 52) in experiment selection logic. This contradicted the "uniform random only" guarantee and the AGENTS.md philosophy.
-- Performed atomic refactor: Removed the `elif "round" in formal...` branch entirely. All card selections now strictly use `random.randint(1, 52)`. Updated comments to reinforce the invariant. No other numeric literals or deck assumptions remain anywhere in core/.
-- Re-ran full simulation loop (NEUROSYMBOLIC_SIMULATION=1) + targeted `select_next_experiment` verification: 100% functional, no crashes, cards always uniform random 1-52 regardless of hypothesis tags/content.
-- Confirmed game logic remains isolated to `games/` directory only.
-- No other issues found (imports, hypothesis generation, pruning, verification engine, interrogation all healthy).
-- Performed no changes to error_log until after verification (see below).
+- Inspected error_log.md and previous last_run.md: previous run had already resolved the deck-bias invariant violation. System is currently in a clean, game-agnostic state.
+- **Architectural improvement implemented:** Made key hyperparameters in SymbolicCore configurable for better experimental flexibility while preserving all defaults and game-agnostic guarantees.
+  - Added `exploration_rate: float = 0.30` and `verification_window: int = 20` to `__init__`.
+  - Updated `select_next_experiment()` to use `self.exploration_rate` instead of hardcoded 0.30.
+  - Updated `verify_global_consistency()` to use `self.verification_window` instead of hardcoded 20-observation window.
+  - This enables future sweeps and tuning without code changes, supporting the research goals.
+- Verified the changes: syntax check passed, custom instantiation test successful, no behavior change for default usage.
+- Confirmed no game-specific code or numeric biases introduced (still strictly uniform random.randint(1,52) and isolated to games/).
+- No errors or failures detected in this run.
+- Performed atomic improvement commit at end of run.
 
 **Verification result:**
 - Syntax checks: PASSED
-- Import + multi-round simulation execution test: SUCCESS
-- Game-agnostic property: NOW FULLY ENFORCED (no %52, no modular deck math, uniform random everywhere)
-- error_log.md analysis: one prior latent issue found and resolved in this run
+- Import + parameter configuration test: SUCCESS
+- Game-agnostic property: MAINTAINED
+- error_log.md analysis: No open errors; previous fix remains valid
 - Git status clean before final commit
 
 **Files modified:**
-- core/symbolic_core.py (final strict game-agnostic cleanup of select_next_experiment)
+- core/symbolic_core.py (added configurable exploration_rate + verification_window; improved experimental control)
 - cron_reports/last_run.md (this report)
-- cron_reports/error_log.md (marked the %52 bias as fixed)
 
 **Git commit hash:** (pending final commit + push)
 
@@ -30,7 +32,7 @@
 
 **Next autonomous focus:**
 - Continue strengthening verification engine and unknown-unknown coverage.
-- Monitor for any re-introduction of implicit game assumptions.
-- Expand predicate expressiveness if needed for more complex Mao rules.
+- Potential next: add hypothesis export/serialization or information-gain metrics logging.
+- Monitor for any re-introduction of implicit assumptions.
 
-This run delivered a high-value correctness fix that closes a gap between stated invariants and actual implementation. System is now more rigorously game-agnostic.
+This run delivered a targeted, low-risk architectural enhancement that increases the system's research utility without compromising invariants. System remains rigorously game-agnostic and ready for continued autonomous experimentation.
