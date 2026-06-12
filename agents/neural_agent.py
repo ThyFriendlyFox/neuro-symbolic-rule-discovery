@@ -92,13 +92,14 @@ class NeuralAgent:
     def respond_to_interrogation(self, questions: List[str], symbolic_core: SymbolicCore) -> List[Dict]:
         """Respond to Symbolic Core's interrogation questions using Gemma.
         This properly closes the two-agent dialogue loop.
+        Enhanced for simulation: provides synthetic but useful responses in offline cron runs.
         """
         if not questions:
             return []
 
         if SIMULATION_MODE:
-            print("  NeuralAgent: SIMULATION mode active — skipping LLM interrogation (offline mode)")
-            return []
+            print("  NeuralAgent: SIMULATION mode active — using fallback interrogation responses (offline mode)")
+            return self._generate_fallback_interrogation_responses(questions)
 
         print(f"Neural Agent: Responding to {len(questions)} interrogation questions from Symbolic Core...")
 
@@ -228,3 +229,22 @@ Return ONLY a valid JSON array."""
         ]
         random.shuffle(candidates)
         return candidates[:n]
+
+    def _generate_fallback_interrogation_responses(self, questions: List[str]) -> List[Dict]:
+        """Generate synthetic but structurally useful responses to Symbolic Core questions.
+        Used only in SIMULATION_MODE to keep the two-agent loop functional during
+        fully offline cron runs without requiring LLM connectivity.
+        Responses are deliberately generic and skeptical to maintain the neuro-symbolic contract.
+        """
+        responses = []
+        for q in questions:
+            # Provide a generic exploratory response that encourages further testing
+            resp = {
+                "question": q,
+                "response": "This may relate to an unknown state variable or meta-rule not yet tracked. Suggest running targeted experiments on penalty triggers and hidden cumulative effects.",
+                "confidence": 0.35,
+                "suggested_tags": ["unknown_unknown", "exploratory", "meta"]
+            }
+            responses.append(resp)
+        print(f"  NeuralAgent (fallback): Generated {len(responses)} synthetic interrogation responses")
+        return responses
