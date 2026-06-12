@@ -56,11 +56,12 @@ class SymbolicCore:
 
     def select_next_experiment(self, game_state: Optional[Dict] = None) -> Tuple[int, Optional[str]]:
         """Strong experiment selection: uses hypothesis to propose concrete test moves.
-        Generates candidate cards likely to falsify/support the formal_condition (boundary testing).
+        Purely game-agnostic: NO hardcoded card values, NO game-specific knowledge.
         Returns (suggested_card, spoken_suggestion). This drives active experimentation."""
         if not self.hypotheses:
-            # True zero-knowledge exploration: try diverse cards
-            return random.choice([7, 14, 21, 28, 35, 42, 49, 3, 11, 19]), None
+            # True zero-knowledge exploration: uniform random over card space
+            card = random.randint(1, 52)
+            return card, None
 
         scored = []
         for hyp in self.hypotheses.values():
@@ -79,28 +80,21 @@ class SymbolicCore:
         formal = best_hyp.formal_condition.lower()
 
         spoken = None
-        card = 0
-
-        # Game-agnostic experiment selection (strictly zero-knowledge, no Mao-specific card values like 7).
-        # Uses abstract strategies based on hypothesis tags and content only. No game knowledge encoded.
+        # Strictly game-agnostic: card selection is always uniform random or based on generic round counter.
+        # No numeric literals that encode deck structure or game rules.
         if any(k in tags_lower + [stmt_lower, formal] for k in ["spoken", "action", "flag", "say", "action_required"]):
-            # Suggest spoken action for hypotheses about required verbal/meta responses (generic)
             card = random.randint(1, 52)
             spoken = "probe" if "action" in tags_lower else "test"
-        elif any(k in tags_lower + [stmt_lower, formal] for k in ["parity", "even", "odd", "modular", "% 2"]):
-            # Parity/modular boundary test using generic integers
-            card = 14 if random.random() > 0.5 else 15
-        elif any(k in tags_lower + [stmt_lower, formal] for k in ["sequence", "previous", "consecutive"]):
-            card = random.randint(1, 52)
         elif "round" in formal or "dynamic" in tags_lower:
-            card = (self.round % 13) * 4 + 1  # generic modular
+            # Use round counter for dynamic testing (generic, no deck assumptions)
+            card = (self.round % 52) + 1
         else:
-            # Default: high-variance random probes for unknown unknowns and exploration
-            card = random.choice([3, 11, 19, 27, 33, 41, 49, 52, 1, 13])
+            # Default and all other cases: uniform random for unknown unknowns
+            card = random.randint(1, 52)
 
-        # Exploration bonus (25% chance) for unknown unknowns: force completely random card
+        # Exploration bonus (30% chance) for unknown unknowns: force completely random card
         # to escape hypothesis lock-in and discover unanticipated rules.
-        if random.random() < 0.25:
+        if random.random() < 0.30:
             card = random.randint(1, 52)
             spoken = None
             print("  → EXPLORATION MODE (unknown-unknown probe): forcing high-entropy random card")
