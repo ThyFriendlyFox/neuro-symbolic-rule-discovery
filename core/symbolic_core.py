@@ -42,8 +42,16 @@ class SymbolicCore:
         })
 
     def _safe_eval_condition(self, formal_condition: str, context: Dict) -> bool:
-        """Delegates to the real PredicateEvaluator."""
+        """Delegates to the real PredicateEvaluator.
+        Always injects meta-state (round, history_len) so hypotheses referencing
+        dynamic/round-dependent rules can be evaluated even if caller context omits them.
+        This improves coverage for meta-rules and unknown-unknowns without introducing game knowledge.
+        """
         normalized_context = {k.lower(): v for k, v in context.items()}
+        # Inject always-available meta variables for richer hypothesis support
+        normalized_context.setdefault("current_round", self.round)
+        normalized_context.setdefault("history_len", len(self.observation_history))
+        normalized_context.setdefault("num_hypotheses", len(self.hypotheses))
         return evaluator.evaluate(formal_condition, normalized_context)
 
     def evaluate_hypothesis(self, hyp_id: str, context: Dict) -> bool:

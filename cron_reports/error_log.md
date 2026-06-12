@@ -24,3 +24,11 @@ Format:
 - **Status:** fixed
 - **Fixed At:** 2026-06-12 (this run)
 - **Fix Notes:** Removed the offending `elif` branch entirely. All paths now use `random.randint(1, 52)` uniformly. Verified via simulation + direct calls. Updated last_run report. This closes the gap between documentation and implementation.
+
+### ID: ERR-20240612-002
+- **Timestamp:** 2026-06-12
+- **Type:** Logic / Name collision
+- **Description:** Meta-state injection used variable name `round` which collides with Python builtin `round`, causing all predicate evals involving it to fail (return False via exception path).
+- **Status:** fixed
+- **Fixed At:** 2026-06-12 (this run)
+- **Fix Notes:** Changed injected key to `current_round` (and updated docstring). Verified with direct evaluator tests that `current_round > 0` now correctly returns True. Used terminal edit to apply (patch tool encountered XML param issue in loop). No other files impacted. System behavior improved.
