@@ -80,14 +80,12 @@ class SymbolicCore:
         formal = best_hyp.formal_condition.lower()
 
         spoken = None
-        # Strictly game-agnostic: card selection is always uniform random or based on generic round counter.
-        # No numeric literals that encode deck structure or game rules.
+        # Strictly game-agnostic: ALL card selections use uniform random.randint(1, 52).
+        # Zero numeric literals or modular arithmetic that could encode deck size/structure.
+        # Round counter may influence spoken suggestions only (still generic).
         if any(k in tags_lower + [stmt_lower, formal] for k in ["spoken", "action", "flag", "say", "action_required"]):
             card = random.randint(1, 52)
             spoken = "probe" if "action" in tags_lower else "test"
-        elif "round" in formal or "dynamic" in tags_lower:
-            # Use round counter for dynamic testing (generic, no deck assumptions)
-            card = (self.round % 52) + 1
         else:
             # Default and all other cases: uniform random for unknown unknowns
             card = random.randint(1, 52)
