@@ -241,7 +241,8 @@ Return ONLY a valid JSON array."""
             # Provide a generic exploratory response that encourages further testing
             resp = {
                 "question": q,
-                "response": "This may relate to an unknown state variable or meta-rule not yet tracked. Suggest running targeted experiments on penalty triggers and hidden cumulative effects.",
+                "answer": "This may relate to an unknown state variable or meta-rule not yet tracked. Suggest running targeted experiments on penalty triggers and hidden cumulative effects.",
+                "new_hypotheses": [],
                 "confidence": 0.35,
                 "suggested_tags": ["unknown_unknown", "exploratory", "meta"]
             }
